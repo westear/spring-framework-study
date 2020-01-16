@@ -85,6 +85,7 @@ public class AnnotatedBeanDefinitionReader {
 		Assert.notNull(environment, "Environment must not be null");
 		this.registry = registry;
 		this.conditionEvaluator = new ConditionEvaluator(registry, environment, null);
+		//其中重要的一步: 往 beanDefinitionRegistry 里设置默认的 5 个 rootBeanDefinition
 		AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
 	}
 
@@ -202,11 +203,11 @@ public class AnnotatedBeanDefinitionReader {
 	 * Register a bean from the given bean class, deriving its metadata from
 	 * class-declared annotations.
 	 * @param beanClass the class of the bean
-	 * @param instanceSupplier a callback for creating an instance of the bean
+	 * @param instanceSupplier a callback for creating an instance of the bean: 创建 bean 实例的回调
 	 * (may be {@code null})
-	 * @param name an explicit name for the bean
+	 * @param name an explicit name for the bean: bean 的显式名称
 	 * @param qualifiers specific qualifier annotations to consider, if any,
-	 * in addition to qualifiers at the bean class level
+	 * in addition to qualifiers at the bean class level: @Qualifier 注解
 	 * @param definitionCustomizers one or more callbacks for customizing the
 	 * factory's {@link BeanDefinition}, e.g. setting a lazy-init or primary flag
 	 * @since 5.0
@@ -214,17 +215,31 @@ public class AnnotatedBeanDefinitionReader {
 	<T> void doRegisterBean(Class<T> beanClass, @Nullable Supplier<T> instanceSupplier, @Nullable String name,
 			@Nullable Class<? extends Annotation>[] qualifiers, BeanDefinitionCustomizer... definitionCustomizers) {
 
+		/*
+			new 一个 AnnotatedGenericBeanDefinition , 该类 implements AnnotatedBeanDefinition 接口, extends GenericBeanDefinition 类，
+			GenericBeanDefinition extends AbstractBeanDefinition, AbstractBeanDefinition implements BeanDefinition
+			AnnotatedBeanDefinition 接口 extends BeanDefinition
+		 */
 		AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(beanClass);
+
+		//根据{@code @Conditional}批注确定是否应跳过这个bean
 		if (this.conditionEvaluator.shouldSkip(abd.getMetadata())) {
 			return;
 		}
 
+		//设置 Bean 创建时的实例回调
 		abd.setInstanceSupplier(instanceSupplier);
+		//根据 该 BeanDefinition实例 解析 该Bean的 Scope 信息，默认Scope=singleton, ScopedProxyMode=no
 		ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
+		//默认设置 bean的范围是 singleton 单例
 		abd.setScope(scopeMetadata.getScopeName());
+		//获得 bean 的名字
 		String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
 
+		//设置 BeanDefinition 的属性值, BeanDefinition 用于描述 Bean
 		AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
+
+		//@Qualifier 不为空
 		if (qualifiers != null) {
 			for (Class<? extends Annotation> qualifier : qualifiers) {
 				if (Primary.class == qualifier) {
@@ -238,12 +253,16 @@ public class AnnotatedBeanDefinitionReader {
 				}
 			}
 		}
+		//多个定制化的 BeanDefinition 信息
 		for (BeanDefinitionCustomizer customizer : definitionCustomizers) {
 			customizer.customize(abd);
 		}
 
+		//包装一个 beanDefinition 的持有对象
 		BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
+		//处理 bean 的 scope 注解中 proxyMode 的值， 是否使用代理，默认 scope使用单例，且不启用代理
 		definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+		//将 bean 注册到 beanDefinitionMap
 		BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
 	}
 

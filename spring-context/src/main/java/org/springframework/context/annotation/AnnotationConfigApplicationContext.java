@@ -63,7 +63,15 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * through {@link #register} calls and then manually {@linkplain #refresh refreshed}.
 	 */
 	public AnnotationConfigApplicationContext() {
+		/*
+			为给定的bean工厂创建一个新的{@code AnnotatedBeanDefinitionReader}
+			关注: 往 beanDefinitionRegistry 里注册默认的 5 个 rootBeanDefinition， 也包含其他信息的设置
+		 */
 		this.reader = new AnnotatedBeanDefinitionReader(this);
+
+		/*
+			为给定的bean工厂创建一个新的{@code ClassPathBeanDefinitionScanner}, 设置 resource 的相关加载信息
+		 */
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
 
@@ -84,8 +92,16 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * {@link Configuration @Configuration} classes
 	 */
 	public AnnotationConfigApplicationContext(Class<?>... componentClasses) {
+		// 调用 public AnnotationConfigApplicationContext();
 		this();
+
+		//设置bean 循环依赖自动解决 的属性为 关闭: allowCircularReferences=false
+//		this.setAllowCircularReferences(false);
+
+		//开始 向 beanDefinitionRegistry 注册自定义的配置类 beanDefinition
 		register(componentClasses);
+
+		//
 		refresh();
 	}
 

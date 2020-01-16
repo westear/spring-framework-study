@@ -130,6 +130,7 @@ public abstract class AnnotationConfigUtils {
 
 
 	/**
+	 * 在给定的注册表中注册所有相关的注释后处理器, 注册默认的RootBeanDefinition
 	 * Register all relevant annotation post processors in the given registry.
 	 * @param registry the registry to operate on
 	 */
@@ -138,6 +139,7 @@ public abstract class AnnotationConfigUtils {
 	}
 
 	/**
+	 * 在给定的注册表中注册所有相关的注释后处理器, 注册默认的RootBeanDefinition
 	 * Register all relevant annotation post processors in the given registry.
 	 * @param registry the registry to operate on
 	 * @param source the configuration source element (already extracted)
@@ -148,39 +150,54 @@ public abstract class AnnotationConfigUtils {
 	public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 			BeanDefinitionRegistry registry, @Nullable Object source) {
 
+		//获得 beanFactory 的实现类，在 extends GenericApplicationContext 并且 implements DefaultListableBeanFactory 的情况下
+		// 优先选择 DefaultListableBeanFactory, 例如 实现类为 AnnotationConfigApplicationContext 的 registry
 		DefaultListableBeanFactory beanFactory = unwrapDefaultListableBeanFactory(registry);
 		if (beanFactory != null) {
+			//添加 OrderComparator 的依赖项列表和可选的数组
 			if (!(beanFactory.getDependencyComparator() instanceof AnnotationAwareOrderComparator)) {
 				beanFactory.setDependencyComparator(AnnotationAwareOrderComparator.INSTANCE);
 			}
+			//设置此BeanFactory使用的自定义自动装配候选解析器
 			if (!(beanFactory.getAutowireCandidateResolver() instanceof ContextAnnotationAutowireCandidateResolver)) {
 				beanFactory.setAutowireCandidateResolver(new ContextAnnotationAutowireCandidateResolver());
 			}
 		}
 
+		/*
+			首先需要实例化 5个 RootBeanDefinition，并将 beanDefinition 注册到 beanDefinitionRegistry，并且放入 beanFactory
+			添加对应 beanDefinitionHolder 到 beanDefs 集合
+		 */
 		Set<BeanDefinitionHolder> beanDefs = new LinkedHashSet<>(8);
 
 		if (!registry.containsBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME)) {
+			//初始化的根BeanDefinition 创建: bean path = org.springframework.context.annotation.internalConfigurationAnnotationProcessor
 			RootBeanDefinition def = new RootBeanDefinition(ConfigurationClassPostProcessor.class);
 			def.setSource(source);
+			//将 beanDefinition 加入 beanFactory, 放入 beanDefinition 持有类的 Set 集合
 			beanDefs.add(registerPostProcessor(registry, def, CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME));
 		}
 
 		if (!registry.containsBeanDefinition(AUTOWIRED_ANNOTATION_PROCESSOR_BEAN_NAME)) {
+			//初始化的根BeanDefinition 创建: bean path = org.springframework.context.annotation.internalAutowiredAnnotationProcessor
 			RootBeanDefinition def = new RootBeanDefinition(AutowiredAnnotationBeanPostProcessor.class);
 			def.setSource(source);
+			//将 beanDefinition 加入 beanFactory, 放入 beanDefinition 持有类的 Set 集合
 			beanDefs.add(registerPostProcessor(registry, def, AUTOWIRED_ANNOTATION_PROCESSOR_BEAN_NAME));
 		}
 
 		// Check for JSR-250 support, and if present add the CommonAnnotationBeanPostProcessor.
 		if (jsr250Present && !registry.containsBeanDefinition(COMMON_ANNOTATION_PROCESSOR_BEAN_NAME)) {
+			//初始化的根BeanDefinition 创建: bean path = org.springframework.context.annotation.internalCommonAnnotationProcessor
 			RootBeanDefinition def = new RootBeanDefinition(CommonAnnotationBeanPostProcessor.class);
 			def.setSource(source);
+			//将 beanDefinition 加入 beanFactory, 放入 beanDefinition 持有类的 Set 集合
 			beanDefs.add(registerPostProcessor(registry, def, COMMON_ANNOTATION_PROCESSOR_BEAN_NAME));
 		}
 
 		// Check for JPA support, and if present add the PersistenceAnnotationBeanPostProcessor.
 		if (jpaPresent && !registry.containsBeanDefinition(PERSISTENCE_ANNOTATION_PROCESSOR_BEAN_NAME)) {
+			//初始化的根BeanDefinition 创建: bean path = org.springframework.context.annotation.internalPersistenceAnnotationProcessor
 			RootBeanDefinition def = new RootBeanDefinition();
 			try {
 				def.setBeanClass(ClassUtils.forName(PERSISTENCE_ANNOTATION_PROCESSOR_CLASS_NAME,
@@ -191,18 +208,23 @@ public abstract class AnnotationConfigUtils {
 						"Cannot load optional framework class: " + PERSISTENCE_ANNOTATION_PROCESSOR_CLASS_NAME, ex);
 			}
 			def.setSource(source);
+			//将 beanDefinition 加入 beanFactory, 放入 beanDefinition 持有类的 Set 集合
 			beanDefs.add(registerPostProcessor(registry, def, PERSISTENCE_ANNOTATION_PROCESSOR_BEAN_NAME));
 		}
 
 		if (!registry.containsBeanDefinition(EVENT_LISTENER_PROCESSOR_BEAN_NAME)) {
+			//初始化的根BeanDefinition 创建: bean path = org.springframework.context.event.internalEventListenerProcessor
 			RootBeanDefinition def = new RootBeanDefinition(EventListenerMethodProcessor.class);
 			def.setSource(source);
+			//将 beanDefinition 加入 beanFactory, 放入 beanDefinition 持有类的 Set 集合
 			beanDefs.add(registerPostProcessor(registry, def, EVENT_LISTENER_PROCESSOR_BEAN_NAME));
 		}
 
 		if (!registry.containsBeanDefinition(EVENT_LISTENER_FACTORY_BEAN_NAME)) {
+			//初始化的根BeanDefinition 创建: bean path = org.springframework.context.event.internalEventListenerFactory
 			RootBeanDefinition def = new RootBeanDefinition(DefaultEventListenerFactory.class);
 			def.setSource(source);
+			//将 beanDefinition 加入 beanFactory, 放入 beanDefinition 持有类的 Set 集合
 			beanDefs.add(registerPostProcessor(registry, def, EVENT_LISTENER_FACTORY_BEAN_NAME));
 		}
 
@@ -211,9 +233,11 @@ public abstract class AnnotationConfigUtils {
 
 	private static BeanDefinitionHolder registerPostProcessor(
 			BeanDefinitionRegistry registry, RootBeanDefinition definition, String beanName) {
-
+		//设置 bean 的 @Role: 完全是后台角色，与最终用户无关, 注册完全属于内部工作的bean时使用
 		definition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+		//把 beanDefinition 加入 BeanDefinition 的注册中心
 		registry.registerBeanDefinition(beanName, definition);
+		//返回 beanDefinition 的持有类
 		return new BeanDefinitionHolder(definition, beanName);
 	}
 
@@ -230,11 +254,22 @@ public abstract class AnnotationConfigUtils {
 		}
 	}
 
+	/**
+	 * 设置 BeanDefinition 的属性值, BeanDefinition 用于描述 Bean
+	 * @param abd AnnotatedBeanDefinition 注解声明的 BeanDefinition
+	 */
 	public static void processCommonDefinitionAnnotations(AnnotatedBeanDefinition abd) {
+		//默认使用 BeanDefinition 中的 元数据 metadata
 		processCommonDefinitionAnnotations(abd, abd.getMetadata());
 	}
 
+	/**
+	 * 设置 BeanDefinition 的属性值, BeanDefinition 用于描述 Bean
+	 * @param abd AnnotatedBeanDefinition 注解声明的 BeanDefinition
+	 * @param metadata AnnotatedTypeMetadata 注解类型元数据
+	 */
 	static void processCommonDefinitionAnnotations(AnnotatedBeanDefinition abd, AnnotatedTypeMetadata metadata) {
+		//Bean 是否注解了懒加载
 		AnnotationAttributes lazy = attributesFor(metadata, Lazy.class);
 		if (lazy != null) {
 			abd.setLazyInit(lazy.getBoolean("value"));
@@ -246,24 +281,35 @@ public abstract class AnnotationConfigUtils {
 			}
 		}
 
+		//是否包含注解 @Primary
 		if (metadata.isAnnotated(Primary.class.getName())) {
 			abd.setPrimary(true);
 		}
+		//是否包含注解 @DependsOn
 		AnnotationAttributes dependsOn = attributesFor(metadata, DependsOn.class);
 		if (dependsOn != null) {
 			abd.setDependsOn(dependsOn.getStringArray("value"));
 		}
 
+		//是否包含注解 @Role
 		AnnotationAttributes role = attributesFor(metadata, Role.class);
 		if (role != null) {
 			abd.setRole(role.getNumber("value").intValue());
 		}
+		//是否包含注解 @Description
 		AnnotationAttributes description = attributesFor(metadata, Description.class);
 		if (description != null) {
 			abd.setDescription(description.getString("value"));
 		}
 	}
 
+	/**
+	 * 关于 bean scope 代理模式的应用信息
+	 * @param metadata ScopeMetadata
+	 * @param definition BeanDefinitionHolder
+	 * @param registry BeanDefinitionRegistry
+	 * @return BeanDefinitionHolder
+	 */
 	static BeanDefinitionHolder applyScopedProxyMode(
 			ScopeMetadata metadata, BeanDefinitionHolder definition, BeanDefinitionRegistry registry) {
 

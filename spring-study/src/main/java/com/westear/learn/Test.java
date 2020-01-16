@@ -2,6 +2,11 @@ package com.westear.learn;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
 /**
  * 功能描述
  *
@@ -13,6 +18,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
  * @version: 1.0
  */
 public class Test {
+
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 	}

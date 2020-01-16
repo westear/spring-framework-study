@@ -171,7 +171,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	/** List of bean definition names, in registration order. */
 	private volatile List<String> beanDefinitionNames = new ArrayList<>(256);
 
-	/** List of names of manually registered singletons, in registration order. */
+	/** List of names of manually registered singletons, in registration order.
+	 * 手动注册单例的名称列表，按注册顺序
+	 */
 	private volatile Set<String> manualSingletonNames = new LinkedHashSet<>(16);
 
 	/** Cached array of bean definition names in case of frozen configuration. */
@@ -285,6 +287,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	}
 
 	/**
+	 * 设置此BeanFactory使用的自定义自动装配候选解析器，在决定是否应将bean定义视为一个自动装配的候选人
 	 * Set a custom autowire candidate resolver for this BeanFactory to use
 	 * when deciding whether a bean definition should be considered as a
 	 * candidate for autowiring.
@@ -881,6 +884,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		if (beanDefinition instanceof AbstractBeanDefinition) {
 			try {
+				//校验 beanDefinition
 				((AbstractBeanDefinition) beanDefinition).validate();
 			}
 			catch (BeanDefinitionValidationException ex) {
@@ -890,6 +894,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 
 		BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
+		//existingDefinition 已存在
 		if (existingDefinition != null) {
 			if (!isAllowBeanDefinitionOverriding()) {
 				throw new BeanDefinitionOverrideException(beanName, beanDefinition, existingDefinition);
@@ -918,7 +923,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			}
 			this.beanDefinitionMap.put(beanName, beanDefinition);
 		}
+		//existingDefinition 不存在
 		else {
+			//检查该工厂的Bean创建阶段是否已经开始,判断存放最近一次创建的 bean 的 name 值的 Set 集合是否为空，为空说明未开始
 			if (hasBeanCreationStarted()) {
 				// Cannot modify startup-time collection elements anymore (for stable iteration)
 				synchronized (this.beanDefinitionMap) {
@@ -927,13 +934,15 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 					updatedDefinitions.addAll(this.beanDefinitionNames);
 					updatedDefinitions.add(beanName);
 					this.beanDefinitionNames = updatedDefinitions;
+					//更新工厂内部的手动单例名称集
 					removeManualSingletonName(beanName);
 				}
 			}
+			// Still in startup registration phase, 仍处于启动注册阶段
 			else {
-				// Still in startup registration phase
 				this.beanDefinitionMap.put(beanName, beanDefinition);
 				this.beanDefinitionNames.add(beanName);
+				//更新工厂内部的手动单例名称集
 				removeManualSingletonName(beanName);
 			}
 			this.frozenBeanDefinitionNames = null;
@@ -1053,18 +1062,28 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 	 * (if this condition does not apply, the action can be skipped)
 	 */
 	private void updateManualSingletonNames(Consumer<Set<String>> action, Predicate<Set<String>> condition) {
+		//该工厂的Bean创建阶段是否已经开始
 		if (hasBeanCreationStarted()) {
 			// Cannot modify startup-time collection elements anymore (for stable iteration)
 			synchronized (this.beanDefinitionMap) {
+				/*
+					Predicate接口的test方法实现为传入的set.contains(beanName), 即为: this.manualSingletonNames.contains(beanName);
+					如果 手动单例名称集 包含 beanName
+				 */
 				if (condition.test(this.manualSingletonNames)) {
 					Set<String> updatedSingletons = new LinkedHashSet<>(this.manualSingletonNames);
+					/*
+						Consumer接口的accept方法实现为传入的set.remove(beanName),即为: updatedSingletons.remove(beanName);
+						删除 手动单例名称集中对应的 beanName
+					 */
 					action.accept(updatedSingletons);
+					//将更新后的 手动单例名称集 赋值给 beanFactory 的 manualSingletonNames 属性
 					this.manualSingletonNames = updatedSingletons;
 				}
 			}
 		}
 		else {
-			// Still in startup registration phase
+			// Still in startup registration phase, 仍处于启动注册阶段
 			if (condition.test(this.manualSingletonNames)) {
 				action.accept(this.manualSingletonNames);
 			}
