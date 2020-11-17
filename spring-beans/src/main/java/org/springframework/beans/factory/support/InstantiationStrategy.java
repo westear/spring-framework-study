@@ -24,6 +24,9 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.lang.Nullable;
 
 /**
+ * 策略接口，负责创建与根bean定义对应的实例。框架里只实现了一个实现类
+ * @see SimpleInstantiationStrategy
+ *
  * Interface responsible for creating instances corresponding to a root bean definition.
  *
  * <p>This is pulled out into a strategy as various approaches are possible,
@@ -65,6 +68,8 @@ public interface InstantiationStrategy {
 			Constructor<?> ctor, Object... args) throws BeansException;
 
 	/**
+	 * 在这个工厂中返回具有给定名称的bean实例，并通过给定的工厂方法创建它。
+	 *
 	 * Return an instance of the bean with the given name in this factory,
 	 * creating it via the given factory method.
 	 * @param bd the bean definition
@@ -74,7 +79,7 @@ public interface InstantiationStrategy {
 	 * @param owner the owning BeanFactory
 	 * @param factoryBean the factory bean instance to call the factory method on,
 	 * or {@code null} in case of a static factory method
-	 * @param factoryMethod the factory method to use
+	 * @param factoryMethod the factory method to use, @Bean 注解的方法定义的 bean
 	 * @param args the factory method arguments to apply
 	 * @return a bean instance for this bean definition
 	 * @throws BeansException if the instantiation attempt failed

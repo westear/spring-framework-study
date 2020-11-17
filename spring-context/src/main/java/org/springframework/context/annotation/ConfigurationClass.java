@@ -30,12 +30,17 @@ import org.springframework.core.io.DescriptiveResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
+import org.springframework.core.type.classreading.AnnotationMetadataReadingVisitor;
 import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 /**
+ * 表示用户定义的{@link Configuration @Configuration}类。
+ * 包括一组{@link Bean}方法，包括所有这些方法
+ * 在类的祖先中定义，以一种“扁平化”的方式。
+ *
  * Represents a user-defined {@link Configuration @Configuration} class.
  * Includes a set of {@link Bean} methods, including all such methods
  * defined in the ancestry of the class, in a 'flattened-out' manner.
@@ -49,6 +54,10 @@ import org.springframework.util.ClassUtils;
  */
 final class ConfigurationClass {
 
+	/**
+	 * @see AnnotationMetadataReadingVisitor
+	 * @see StandardAnnotationMetadata
+	 */
 	private final AnnotationMetadata metadata;
 
 	private final Resource resource;
@@ -71,7 +80,7 @@ final class ConfigurationClass {
 
 	/**
 	 * Create a new {@link ConfigurationClass} with the given name.
-	 * @param metadataReader reader used to parse the underlying {@link Class}
+	 * @param metadataReader reader used to parse the underlying {@link Class} 用于解析底层的 Class
 	 * @param beanName must not be {@code null}
 	 * @see ConfigurationClass#ConfigurationClass(Class, ConfigurationClass)
 	 */
@@ -87,7 +96,7 @@ final class ConfigurationClass {
 	 * using the {@link Import} annotation or automatically processed as a nested
 	 * configuration class (if importedBy is not {@code null}).
 	 * @param metadataReader reader used to parse the underlying {@link Class}
-	 * @param importedBy the configuration class importing this one or {@code null}
+	 * @param importedBy the configuration class importing this one or {@code null}, 被 @Import 注解而形成的配置类 set 集合
 	 * @since 3.1.1
 	 */
 	public ConfigurationClass(MetadataReader metadataReader, @Nullable ConfigurationClass importedBy) {
@@ -114,7 +123,7 @@ final class ConfigurationClass {
 	 * using the {@link Import} annotation or automatically processed as a nested
 	 * configuration class (if imported is {@code true}).
 	 * @param clazz the underlying {@link Class} to represent
-	 * @param importedBy the configuration class importing this one (or {@code null})
+	 * @param importedBy the configuration class importing this one (or {@code null}), 被 @Import 注解而形成的配置类 set 集合
 	 * @since 3.1.1
 	 */
 	public ConfigurationClass(Class<?> clazz, @Nullable ConfigurationClass importedBy) {

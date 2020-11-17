@@ -85,7 +85,7 @@ public class AnnotatedBeanDefinitionReader {
 		Assert.notNull(environment, "Environment must not be null");
 		this.registry = registry;
 		this.conditionEvaluator = new ConditionEvaluator(registry, environment, null);
-		//其中重要的一步: 往 beanDefinitionRegistry 里设置默认的 5 个 rootBeanDefinition
+		//其中重要的一步: 往 beanDefinitionRegistry 里设置默认的 6 个 rootBeanDefinition
 		AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
 	}
 

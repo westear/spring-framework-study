@@ -21,6 +21,9 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProce
 import org.springframework.core.type.AnnotationMetadata;
 
 /**
+ * 接口由处理@{@link Configuration}类时注册额外bean定义的类型实现。在bean定义级别(与{@code @Bean}方法/实例级别相反)操作时非常有用。
+ * 除了{@code @ configuration}和{@link ImportSelector}之外，还可以将此类提供给@{@link Import}注释(或者也可以从{@code ImportSelector}返回)。
+ *
  * Interface to be implemented by types that register additional bean definitions when
  * processing @{@link Configuration} classes. Useful when operating at the bean definition
  * level (as opposed to {@code @Bean} method/instance level) is desired or necessary.

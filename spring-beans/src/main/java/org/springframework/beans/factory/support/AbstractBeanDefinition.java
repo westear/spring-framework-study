@@ -738,6 +738,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	}
 
 	/**
+	 * 返回是否允许访问非公共构造函数和方法。
 	 * Return whether to allow access to non-public constructors and methods.
 	 */
 	public boolean isNonPublicAccessAllowed() {
@@ -755,6 +756,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	}
 
 	/**
+	 * 返回是在宽松模式还是在严格模式下解析构造函数。
 	 * Return whether to resolve constructors in lenient mode or in strict mode.
 	 */
 	public boolean isLenientConstructorResolution() {
@@ -821,7 +823,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	}
 
 	/**
-	 * Return if there are constructor argument values defined for this bean.
+	 * Return if there are constructor argument values defined for this bean. 如果有为这个bean定义的构造函数参数值，则返回。
 	 */
 	@Override
 	public boolean hasConstructorArgumentValues() {

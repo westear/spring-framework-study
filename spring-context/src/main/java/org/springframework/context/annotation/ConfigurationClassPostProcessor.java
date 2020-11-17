@@ -215,6 +215,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 
 	/**
 	 * Derive further bean definitions from the configuration classes in the registry.
+	 * 从注册表中的配置类注册更多的bean定义（构造为BeanDefinition）。
 	 */
 	@Override
 	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
@@ -233,6 +234,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	}
 
 	/**
+	 * 准备在运行时服务bean请求的配置类, 用cglib增强的子类替换它们。
 	 * Prepare the Configuration classes for servicing bean requests at runtime
 	 * by replacing them with CGLIB-enhanced subclasses.
 	 */
@@ -250,18 +252,32 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			processConfigBeanDefinitions((BeanDefinitionRegistry) beanFactory);
 		}
 
+		//用cglib增强的子类替换该类
+		//如果配置类被 @Configuration 注解， 那么会对该类进行 CGLIB 代理，替换原类。
+		// e.g: bd 的 class 变成 com.westear.configuration.DemoConfig$$EnhancerBySpringCGLIB$$98c28b65
 		enhanceConfigurationClasses(beanFactory);
+
 		beanFactory.addBeanPostProcessor(new ImportAwareBeanPostProcessor(beanFactory));
 	}
 
 	/**
 	 * Build and validate a configuration model based on the registry of
 	 * {@link Configuration} classes.
+	 * 查找, 验证，解析, 构造 配置类(包含普通类) BeanDefinition, 并注册到 beanFactory
 	 */
 	public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
 		List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
 		String[] candidateNames = registry.getBeanDefinitionNames();
 
+		/**
+		 * meta attribute = full: 被 @Configuration 注解的配置类标记, 如果找到 @Configuration, 就不再考虑标记 lite 了
+		 * meta attribute = lite:被 自定义注解中包含了 (
+		 *                         @Component、
+		 *                         @ComponentScan (扫描后构造对应 BeanDefinition 并放入 beanFactory )、
+		 *                         @Import、
+		 *                         @ImportResource )
+		 *                     注解的配置类标记 mata attribute=lite,
+		 */
 		for (String beanName : candidateNames) {
 			BeanDefinition beanDef = registry.getBeanDefinition(beanName);
 			if (ConfigurationClassUtils.isFullConfigurationClass(beanDef) ||
@@ -270,12 +286,17 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 					logger.debug("Bean definition has already been processed as a configuration class: " + beanDef);
 				}
 			}
+			/*
+				判断该 bean 是否添加了 @Configuration 注解, 如果加了该注解，就不再判断以下几个注解
+				@Component,@ComponentScan,@Import,@ImportResource
+			 */
 			else if (ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)) {
 				configCandidates.add(new BeanDefinitionHolder(beanDef, beanName));
 			}
 		}
 
 		// Return immediately if no @Configuration classes were found
+		//如果 bean 没有加 任何可以成为配置类的注解,则返回
 		if (configCandidates.isEmpty()) {
 			return;
 		}
@@ -288,6 +309,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		});
 
 		// Detect any custom bean name generation strategy supplied through the enclosing application context
+		//检测通过封闭的应用程序上下文提供的任何自定义bean名称生成策略
 		SingletonBeanRegistry sbr = null;
 		if (registry instanceof SingletonBeanRegistry) {
 			sbr = (SingletonBeanRegistry) registry;
@@ -305,6 +327,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		}
 
 		// Parse each @Configuration class
+		//解析每个配置类
 		ConfigurationClassParser parser = new ConfigurationClassParser(
 				this.metadataReaderFactory, this.problemReporter, this.environment,
 				this.resourceLoader, this.componentScanBeanNameGenerator, registry);
@@ -315,6 +338,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			parser.parse(candidates);
 			parser.validate();
 
+			//解析过后的配置类集合
 			Set<ConfigurationClass> configClasses = new LinkedHashSet<>(parser.getConfigurationClasses());
 			configClasses.removeAll(alreadyParsed);
 
@@ -324,10 +348,15 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 						registry, this.sourceExtractor, this.resourceLoader, this.environment,
 						this.importBeanNameGenerator, parser.getImportRegistry());
 			}
-			this.reader.loadBeanDefinitions(configClasses);
-			alreadyParsed.addAll(configClasses);
 
+			//将这些配置类构造成 AnnotatedGenericBeanDefinition 注册到 beanFactory
+			this.reader.loadBeanDefinitions(configClasses);
+
+			alreadyParsed.addAll(configClasses);
 			candidates.clear();
+
+			//此时可以从 beanFactory 里拿到配置 bean 了
+			//newCandidateNames 是有可能比 candidateNames 多的 , 所以需要更新 candidateNames
 			if (registry.getBeanDefinitionCount() > candidateNames.length) {
 				String[] newCandidateNames = registry.getBeanDefinitionNames();
 				Set<String> oldCandidateNames = new HashSet<>(Arrays.asList(candidateNames));
@@ -347,7 +376,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 				candidateNames = newCandidateNames;
 			}
 		}
-		while (!candidates.isEmpty());
+		while (!candidates.isEmpty()); //candidates = 空的时候，退出配置类解析的循环
 
 		// Register the ImportRegistry as a bean in order to support ImportAware @Configuration classes
 		if (sbr != null && !sbr.containsSingleton(IMPORT_REGISTRY_BEAN_NAME)) {
@@ -362,6 +391,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 	}
 
 	/**
+	 * 对一个BeanFactory进行后处理，以搜索配置类 beanDefinition;
+	 * 然后使用{@link ConfigurationClassEnhancer}对任何候选对象进行增强。
+	 * 候选状态由BeanDefinition属性元数据决定。
+	 *
 	 * Post-processes a BeanFactory in search of Configuration class BeanDefinitions;
 	 * any candidates are then enhanced by a {@link ConfigurationClassEnhancer}.
 	 * Candidate status is determined by BeanDefinition attribute metadata.
@@ -371,6 +404,8 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 		Map<String, AbstractBeanDefinition> configBeanDefs = new LinkedHashMap<>();
 		for (String beanName : beanFactory.getBeanDefinitionNames()) {
 			BeanDefinition beanDef = beanFactory.getBeanDefinition(beanName);
+
+			//如果当前配置类是 full 属性的，也就是该 bean 是被 @Configuration 注解的
 			if (ConfigurationClassUtils.isFullConfigurationClass(beanDef)) {
 				if (!(beanDef instanceof AbstractBeanDefinition)) {
 					throw new BeanDefinitionStoreException("Cannot enhance @Configuration bean definition '" +
@@ -382,6 +417,7 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 							"is a non-static @Bean method with a BeanDefinitionRegistryPostProcessor " +
 							"return type: Consider declaring such methods as 'static'.");
 				}
+				//全配置类(full beanDefinition)
 				configBeanDefs.put(beanName, (AbstractBeanDefinition) beanDef);
 			}
 		}
@@ -390,21 +426,25 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 			return;
 		}
 
+		//被 @Configuration 注解的配置类， 使用CGLIB生成该配置类的代理类（enhance: 增强类）
 		ConfigurationClassEnhancer enhancer = new ConfigurationClassEnhancer();
 		for (Map.Entry<String, AbstractBeanDefinition> entry : configBeanDefs.entrySet()) {
 			AbstractBeanDefinition beanDef = entry.getValue();
 			// If a @Configuration class gets proxied, always proxy the target class
 			beanDef.setAttribute(AutoProxyUtils.PRESERVE_TARGET_CLASS_ATTRIBUTE, Boolean.TRUE);
 			try {
-				// Set enhanced subclass of the user-specified bean class
+				// Set enhanced subclass of the user-specified bean class, 设置用户指定bean类的增强子类
 				Class<?> configClass = beanDef.resolveBeanClass(this.beanClassLoader);
 				if (configClass != null) {
+					//CGLIB生成一个配置的增强代理类, 返回该类的对象
 					Class<?> enhancedClass = enhancer.enhance(configClass, this.beanClassLoader);
+					//如果该类对象不等于配置类对象
 					if (configClass != enhancedClass) {
 						if (logger.isTraceEnabled()) {
 							logger.trace(String.format("Replacing bean definition '%s' existing class '%s' with " +
 									"enhanced class '%s'", entry.getKey(), configClass.getName(), enhancedClass.getName()));
 						}
+						//修改该配置类 beanDefinition 的 BeanClass 属性， 用增强类替代
 						beanDef.setBeanClass(enhancedClass);
 					}
 				}

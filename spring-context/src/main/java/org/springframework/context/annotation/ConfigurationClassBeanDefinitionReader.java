@@ -108,6 +108,8 @@ class ConfigurationClassBeanDefinitionReader {
 
 
 	/**
+	 * 读取{@code configurationModel}，根据bean的内容向注册中心注册bean定义。
+	 *
 	 * Read {@code configurationModel}, registering bean definitions
 	 * with the registry based on its contents.
 	 */
@@ -119,6 +121,8 @@ class ConfigurationClassBeanDefinitionReader {
 	}
 
 	/**
+	 * 读取一个特定的{@link ConfigurationClass}，注册类本身及其所有 @Bean 注释的方法的bean定义。
+	 *
 	 * Read a particular {@link ConfigurationClass}, registering bean definitions
 	 * for the class itself and all of its {@link Bean} methods.
 	 */
@@ -134,18 +138,23 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		//如果该配置类是被 @Import 注解引进的, 构造成 AnnotatedGenericBeanDefinition 注册进 beanFactory
 		if (configClass.isImported()) {
 			registerBeanDefinitionForImportedConfigurationClass(configClass);
 		}
+		//该配置类存在 @Bean 注解的方法，也需要将返回值构造成 ConfigurationClassBeanDefinition 注册进 beanFactory
 		for (BeanMethod beanMethod : configClass.getBeanMethods()) {
 			loadBeanDefinitionsForBeanMethod(beanMethod);
 		}
 
+		//注册由 @ImportedResources 注解引进的配置 bean
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+		//注册实现了 ImportBeanDefinitionRegistrars 接口的 bean
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 
 	/**
+	 * 将一个被 @Import 的 class 构造成 AnnotatedGenericBeanDefinition , 注册到 beanFactory
 	 * Register the {@link Configuration} class itself as a bean definition.
 	 */
 	private void registerBeanDefinitionForImportedConfigurationClass(ConfigurationClass configClass) {
@@ -168,6 +177,8 @@ class ConfigurationClassBeanDefinitionReader {
 	}
 
 	/**
+	 * 将 @Bean 注解的方法 返回的对象构造的 bean 注入 beanFactory
+	 *
 	 * Read the given {@link BeanMethod}, registering bean definitions
 	 * with the BeanDefinitionRegistry based on its contents.
 	 */
@@ -208,6 +219,7 @@ class ConfigurationClassBeanDefinitionReader {
 			return;
 		}
 
+		//构造 ConfigurationClassBeanDefinition
 		ConfigurationClassBeanDefinition beanDef = new ConfigurationClassBeanDefinition(configClass, metadata);
 		beanDef.setResource(configClass.getResource());
 		beanDef.setSource(this.sourceExtractor.extractSource(metadata, configClass.getResource()));
@@ -271,6 +283,7 @@ class ConfigurationClassBeanDefinitionReader {
 			logger.trace(String.format("Registering bean definition for @Bean method %s.%s()",
 					configClass.getMetadata().getClassName(), beanName));
 		}
+		//将 @Bean 注解的方法 返回的对象构造的 bean 注入 beanFactory
 		this.registry.registerBeanDefinition(beanName, beanDefToRegister);
 	}
 

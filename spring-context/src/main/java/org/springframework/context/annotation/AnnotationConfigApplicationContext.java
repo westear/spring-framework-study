@@ -53,6 +53,9 @@ import org.springframework.util.Assert;
  */
 public class AnnotationConfigApplicationContext extends GenericApplicationContext implements AnnotationConfigRegistry {
 
+	/**
+	 * reader 将生成 beanDefinition 以及相关 bean信息, 并注册到 beanFactory
+	 */
 	private final AnnotatedBeanDefinitionReader reader;
 
 	private final ClassPathBeanDefinitionScanner scanner;
@@ -70,7 +73,9 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 		this.reader = new AnnotatedBeanDefinitionReader(this);
 
 		/*
-			为给定的bean工厂创建一个新的{@code ClassPathBeanDefinitionScanner}, 设置 resource 的相关加载信息
+			为给定的bean工厂创建一个新的{@code ClassPathBeanDefinitionScanner}
+			只是为了程序员能在外部手动调用scan扫描包，
+			当参数是配置类的时候，并没有调用这个scanner, 真正扫描的逻辑在配置类解析逻辑中
 		 */
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
@@ -98,10 +103,13 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 		//设置bean 循环依赖自动解决 的属性为 关闭: allowCircularReferences=false
 //		this.setAllowCircularReferences(false);
 
-		//开始 向 beanDefinitionRegistry 注册自定义的配置类 beanDefinition
+		/*
+			reader 将生成 beanDefinition 以及相关 bean信息, 并注册到 beanFactory
+			开始 向 beanDefinitionRegistry 注册自定义的配置类 beanDefinition
+		 */
 		register(componentClasses);
 
-		//
+		//实例化bean
 		refresh();
 	}
 

@@ -19,6 +19,9 @@ package org.springframework.context.annotation;
 import org.springframework.core.type.AnnotationMetadata;
 
 /**
+ * 接口由类型实现，这些类型根据给定的选择条件(通常是一个或多个注释属性)确定应该导入哪个@{@link Configuration}类。
+ * 返回的类会当做一个配置类进行处理
+ *
  * Interface to be implemented by types that determine which @{@link Configuration}
  * class(es) should be imported based on a given selection criteria, usually one or
  * more annotation attributes.
@@ -48,6 +51,8 @@ import org.springframework.core.type.AnnotationMetadata;
 public interface ImportSelector {
 
 	/**
+	 * 返回的类会当做一个配置类进行处理
+	 *
 	 * Select and return the names of which class(es) should be imported based on
 	 * the {@link AnnotationMetadata} of the importing @{@link Configuration} class.
 	 */

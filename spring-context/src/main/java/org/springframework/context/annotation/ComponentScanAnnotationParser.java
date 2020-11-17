@@ -73,6 +73,14 @@ class ComponentScanAnnotationParser {
 	}
 
 
+	/**
+	 * 解析 @ComponentScan 或者 @ComponentScans 的注解属性，
+	 * 解析扫描包的class，并生成 beanDefinition（ScannedGenericDefinition） -> 注册到 beanFactory
+	 *
+	 * @param componentScan AnnotationAttributes 注解属性
+	 * @param declaringClass 配置类全限定名
+	 * @return BeanDefinitionHolder set集合
+	 */
 	public Set<BeanDefinitionHolder> parse(AnnotationAttributes componentScan, final String declaringClass) {
 		ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(this.registry,
 				componentScan.getBoolean("useDefaultFilters"), this.environment, this.resourceLoader);
@@ -129,6 +137,7 @@ class ComponentScanAnnotationParser {
 				return declaringClass.equals(className);
 			}
 		});
+		//解析指定扫描包的class，并生成 beanDefinition（ScannedGenericDefinition） -> 注册到 beanFactory
 		return scanner.doScan(StringUtils.toStringArray(basePackages));
 	}
 

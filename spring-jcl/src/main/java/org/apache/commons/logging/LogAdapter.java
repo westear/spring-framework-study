@@ -47,6 +47,10 @@ final class LogAdapter {
 
 	private static final LogApi logApi;
 
+	/*
+	 * 控制 spring 使用的日志框架的静态代码块
+	 * spring4.x 是集成了 commons-logging 这是 spring4 和 spring5 的区别
+	 */
 	static {
 		if (isPresent(LOG4J_SPI)) {
 			if (isPresent(LOG4J_SLF4J_PROVIDER) && isPresent(SLF4J_SPI)) {
@@ -56,6 +60,7 @@ final class LogAdapter {
 				logApi = LogApi.SLF4J_LAL;
 			}
 			else {
+				//使用的是 log4j 2.x 版本
 				// Use Log4j 2.x directly, including location awareness support
 				logApi = LogApi.LOG4J;
 			}
@@ -69,7 +74,7 @@ final class LogAdapter {
 			logApi = LogApi.SLF4J;
 		}
 		else {
-			// java.util.logging as default
+			// java.util.logging as default, 默认使用 jdk util logger
 			logApi = LogApi.JUL;
 		}
 	}
@@ -84,6 +89,7 @@ final class LogAdapter {
 	 * @param name the logger name
 	 */
 	public static Log createLog(String name) {
+		// logApi: 默认的值是： JUL -> JdkLogger
 		switch (logApi) {
 			case LOG4J:
 				return Log4jAdapter.createLog(name);

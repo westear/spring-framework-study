@@ -74,6 +74,13 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 	}
 
 
+	/**
+	 * 初始化 bean 之前进行处理
+	 * @param bean the new bean instance
+	 * @param beanName the name of the bean
+	 * @return
+	 * @throws BeansException
+	 */
 	@Override
 	@Nullable
 	public Object postProcessBeforeInitialization(final Object bean, String beanName) throws BeansException {
@@ -99,23 +106,32 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 		return bean;
 	}
 
+	//对每个符合条件的 bean 初始化的操作
 	private void invokeAwareInterfaces(Object bean) {
 		if (bean instanceof Aware) {
+
 			if (bean instanceof EnvironmentAware) {
 				((EnvironmentAware) bean).setEnvironment(this.applicationContext.getEnvironment());
 			}
+
 			if (bean instanceof EmbeddedValueResolverAware) {
 				((EmbeddedValueResolverAware) bean).setEmbeddedValueResolver(this.embeddedValueResolver);
 			}
+
 			if (bean instanceof ResourceLoaderAware) {
 				((ResourceLoaderAware) bean).setResourceLoader(this.applicationContext);
 			}
+
 			if (bean instanceof ApplicationEventPublisherAware) {
 				((ApplicationEventPublisherAware) bean).setApplicationEventPublisher(this.applicationContext);
 			}
+
 			if (bean instanceof MessageSourceAware) {
 				((MessageSourceAware) bean).setMessageSource(this.applicationContext);
 			}
+
+			//如果一个 bean 实现了 ApplicationContextAware 接口， 那么把 spring 的 applicationContext 设置给这个 bean
+			// 这个bean 可以通过设置一个 applicationContext 属性变量操作 applicationContext
 			if (bean instanceof ApplicationContextAware) {
 				((ApplicationContextAware) bean).setApplicationContext(this.applicationContext);
 			}

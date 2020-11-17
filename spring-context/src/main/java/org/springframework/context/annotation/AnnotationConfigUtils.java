@@ -61,6 +61,11 @@ public abstract class AnnotationConfigUtils {
 
 	/**
 	 * The bean name of the internally managed Configuration annotation processor.
+	 * 这个spring容器内初始化的处理器， 负责：
+	 * 	扫描
+	 * 	解析注解
+	 * 	注解 @import
+	 * 	......
 	 */
 	public static final String CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME =
 			"org.springframework.context.annotation.internalConfigurationAnnotationProcessor";
@@ -165,13 +170,14 @@ public abstract class AnnotationConfigUtils {
 		}
 
 		/*
-			首先需要实例化 5个 RootBeanDefinition，并将 beanDefinition 注册到 beanDefinitionRegistry，并且放入 beanFactory
+			首先需要实例化 6个 RootBeanDefinition，并将 beanDefinition 注册到 beanDefinitionRegistry，并且放入 beanFactory
 			添加对应 beanDefinitionHolder 到 beanDefs 集合
 		 */
 		Set<BeanDefinitionHolder> beanDefs = new LinkedHashSet<>(8);
 
 		if (!registry.containsBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME)) {
-			//初始化的根BeanDefinition 创建: bean path = org.springframework.context.annotation.internalConfigurationAnnotationProcessor
+			//初始化的根BeanDefinition 创建: bean path = org.springframework.context.annotation.ConfigurationClassPostProcessor
+			//RootBeanDefinition 描述了 spring 容器内最基础，最根本的 Class， 使其成为一个 beanDefinition
 			RootBeanDefinition def = new RootBeanDefinition(ConfigurationClassPostProcessor.class);
 			def.setSource(source);
 			//将 beanDefinition 加入 beanFactory, 放入 beanDefinition 持有类的 Set 集合

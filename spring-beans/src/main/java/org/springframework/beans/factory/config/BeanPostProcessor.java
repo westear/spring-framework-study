@@ -20,6 +20,12 @@ import org.springframework.beans.BeansException;
 import org.springframework.lang.Nullable;
 
 /**
+ * spring 的扩展点之一,
+ * 实现该接口，可以在 bean 实例化之前 进行自定义的一些处理，
+ * 可以配置多个 BeanPostProcessor,并设置 order 属性控制每个 BeanPostProcessor 的执行次序
+ * spring 框架中也有一些类使用了该接口,比如:
+ * @see org.springframework.context.support.ApplicationContextAwareProcessor, 该类在 refresh() 每个 bean 时加载
+ *
  * Factory hook that allows for custom modification of new bean instances,
  * e.g. checking for marker interfaces or wrapping them with proxies.
  *

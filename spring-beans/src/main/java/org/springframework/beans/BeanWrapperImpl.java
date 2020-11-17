@@ -136,6 +136,7 @@ public class BeanWrapperImpl extends AbstractNestablePropertyAccessor implements
 
 
 	/**
+	 * 设置要保存的bean实例，而不打开{@link java.util.Optional}。
 	 * Set a bean instance to hold, without any unwrapping of {@link java.util.Optional}.
 	 * @param object the actual target object
 	 * @since 4.3

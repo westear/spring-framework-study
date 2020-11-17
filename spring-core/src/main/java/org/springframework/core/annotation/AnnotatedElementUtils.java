@@ -543,6 +543,8 @@ public abstract class AnnotatedElementUtils {
 	}
 
 	/**
+	 * 在提供的{@link AnnotatedElement}之上的注释层次结构中，获取所有注释属性，并将结果存储在{@link MultiValueMap}中。
+	 *
 	 * Get the annotation attributes of <strong>all</strong> annotations of
 	 * the specified {@code annotationName} in the annotation hierarchy above
 	 * the supplied {@link AnnotatedElement} and store the results in a

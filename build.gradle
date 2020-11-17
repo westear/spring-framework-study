@@ -75,15 +75,22 @@ configure(allprojects) { project ->
 		}
 	}
 
-	configurations.all {
-		// Check for updates every build
-		resolutionStrategy.cacheChangingModulesFor 0, "seconds"
+//	configurations.all {
+//		// Check for updates every build
+//		resolutionStrategy.cacheChangingModulesFor 0, "seconds"
+//
+//		// Consistent slf4j version (e.g. clashes between slf4j versions)
+//		resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+//			if (details.requested.group == "org.slf4j") {
+//				details.useVersion slf4jVersion
+//			}
+//		}
+//	}
 
-		// Consistent slf4j version (e.g. clashes between slf4j versions)
-		resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-			if (details.requested.group == "org.slf4j") {
-				details.useVersion slf4jVersion
-			}
+	allprojects {
+		repositories {
+			maven{ url 'http://maven.aliyun.com/nexus/content/groups/public/'}
+			maven { url "http://repo.springsource.org/plugins-release" }
 		}
 	}
 

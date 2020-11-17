@@ -7,17 +7,14 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.MessageSource;
-import org.springframework.context.MessageSourceAware;
-import org.springframework.context.ResourceLoaderAware;
+import org.springframework.context.*;
 import org.springframework.context.weaving.LoadTimeWeaverAware;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.instrument.classloading.LoadTimeWeaver;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -39,7 +36,8 @@ import java.util.Objects;
  */
 @Component
 public class X implements BeanNameAware, BeanClassLoaderAware, BeanFactoryAware, ResourceLoaderAware,
-		MessageSourceAware, ApplicationContextAware, InitializingBean, LoadTimeWeaverAware {
+		MessageSourceAware, ApplicationContextAware, InitializingBean, LoadTimeWeaverAware,
+		LifecycleProcessor,SmartLifecycle {
 
 	@Autowired
 	private ApplicationContext applicationContext;
@@ -135,7 +133,43 @@ public class X implements BeanNameAware, BeanClassLoaderAware, BeanFactoryAware,
 		System.out.println("定义的编织器，用于在加载时处理类定义。没有切面，不执行");
 	}
 
+	@PreDestroy
+	public void preDestroy() {
+		System.out.println("@PreDestroy: destroy bean ============= ");
+	}
 
+
+	/**
+	 * 需要手动调用 implements Lifecycle, LifecycleProcessor的方法
+	 */
+	private boolean isRunning = false;
+
+	@Override
+	public void onRefresh() {
+		System.out.println("====== LifecycleProcessor onRefresh ========");
+	}
+
+	@Override
+	public void onClose() {
+		System.out.println("====== LifecycleProcessor onClose ========");
+	}
+
+	@Override
+	public void start() {
+		isRunning = true;
+		System.out.println("====== Lifecycle start ========");
+	}
+
+	@Override
+	public void stop() {
+		isRunning = false;
+		System.out.println("====== Lifecycle stop ========");
+	}
+
+	@Override
+	public boolean isRunning() {
+		return this.isRunning;
+	}
 
 	private void readResource(ClassLoader classLoader) throws IOException {
 		Enumeration<URL> urls  = classLoader.getResources("resource.properties");

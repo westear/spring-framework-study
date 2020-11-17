@@ -19,6 +19,13 @@ package org.springframework.beans.factory.config;
 import org.springframework.beans.BeansException;
 
 /**
+ * spring 的扩展点之一,
+ * 实现该接口，可以在spring 的 bean 创建之前修改 bean 的定义属性
+ * spring 允许 BeanFactoryPostProcessor 在容器实例化任何其他bean之前读取配置元数据。
+ * 并可以根据需要进行修改，例如可以把 bean的 scope 从 singleton 改为 prototype , 也可以把 xml 中 bean 定义的 property 的值修改掉
+ * 可以像 BeanPostProcessor 一样，配置多个 BeanFactoryPostProcessor,并设置 order 属性控制每个 BeanFactoryPostProcessor 的执行次序
+ * BeanFactoryPostProcessor 是在 spring 容器读取了 bean 定义之后，在 bean 实例化之前执行的( before new Bean() )
+ *
  * Allows for custom modification of an application context's bean definitions,
  * adapting the bean property values of the context's underlying bean factory.
  *

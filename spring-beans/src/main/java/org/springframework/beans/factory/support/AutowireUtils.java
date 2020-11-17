@@ -64,6 +64,7 @@ abstract class AutowireUtils {
 
 
 	/**
+	 * 排序给定的构造函数，优先选择公共构造函数和具有最多参数的“贪婪”构造函数。结果将首先包含参数数量减少的公共构造函数，然后是参数数量减少的非公共构造函数。
 	 * Sort the given constructors, preferring public constructors and "greedy" ones with
 	 * a maximum number of arguments. The result will contain public constructors first,
 	 * with decreasing number of arguments, then non-public constructors, again with

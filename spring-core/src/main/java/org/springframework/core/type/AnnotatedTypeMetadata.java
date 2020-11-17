@@ -39,30 +39,37 @@ import org.springframework.util.MultiValueMap;
 public interface AnnotatedTypeMetadata {
 
 	/**
+	 * 确定基础元素是否定义了给定类型的注释或元注释。
+	 * 如果这个方法返回 true, 那么 getAnnotationAttributes 方法将返回一个不为空的 map
+	 *
 	 * Determine whether the underlying element has an annotation or meta-annotation
 	 * of the given type defined.
 	 * <p>If this method returns {@code true}, then
 	 * {@link #getAnnotationAttributes} will return a non-null Map.
-	 * @param annotationName the fully qualified class name of the annotation
+	 * @param annotationName the fully qualified class name of the annotation, 指定查找的注释的完全限定类名
 	 * type to look for
 	 * @return whether a matching annotation is defined
 	 */
 	boolean isAnnotated(String annotationName);
 
 	/**
+	 * 检索给定类型的注释的属性(例如，如果在底层元素上定义了属性，则为直接注释或元注释)，同时考虑对复合注释的属性覆盖。
+	 *
 	 * Retrieve the attributes of the annotation of the given type, if any (i.e. if
 	 * defined on the underlying element, as direct annotation or meta-annotation),
 	 * also taking attribute overrides on composed annotations into account.
-	 * @param annotationName the fully qualified class name of the annotation
+	 * @param annotationName the fully qualified class name of the annotation, 指定查找的注释的完全限定类名
 	 * type to look for
 	 * @return a Map of attributes, with the attribute name as key (e.g. "value")
 	 * and the defined attribute value as Map value. This return value will be
-	 * {@code null} if no matching annotation is defined.
+	 * {@code null} if no matching annotation is defined. 返回一个 map: key的annotation的属性名，value=对应属性的值
 	 */
 	@Nullable
 	Map<String, Object> getAnnotationAttributes(String annotationName);
 
 	/**
+	 * 检索给定类型的注释的属性(例如，如果在底层元素上定义了属性，则为直接注释或元注释)，同时考虑对复合注释的属性覆盖。
+	 *
 	 * Retrieve the attributes of the annotation of the given type, if any (i.e. if
 	 * defined on the underlying element, as direct annotation or meta-annotation),
 	 * also taking attribute overrides on composed annotations into account.
@@ -70,7 +77,7 @@ public interface AnnotatedTypeMetadata {
 	 * type to look for
 	 * @param classValuesAsString whether to convert class references to String
 	 * class names for exposure as values in the returned Map, instead of Class
-	 * references which might potentially have to be loaded first
+	 * references which might potentially have to be loaded first。是否将类引用转换为字符串类名，以便在返回的映射中显示为值，而不是可能必须首先加载的类引用
 	 * @return a Map of attributes, with the attribute name as key (e.g. "value")
 	 * and the defined attribute value as Map value. This return value will be
 	 * {@code null} if no matching annotation is defined.
@@ -79,6 +86,8 @@ public interface AnnotatedTypeMetadata {
 	Map<String, Object> getAnnotationAttributes(String annotationName, boolean classValuesAsString);
 
 	/**
+	 * 检索给定类型的所有注释的所有属性(例如，如果在底层元素上定义了直接注释或元注释)。请注意，此变体不考虑属性覆盖。
+	 *
 	 * Retrieve all attributes of all annotations of the given type, if any (i.e. if
 	 * defined on the underlying element, as direct annotation or meta-annotation).
 	 * Note that this variant does <i>not</i> take attribute overrides into account.
@@ -93,6 +102,8 @@ public interface AnnotatedTypeMetadata {
 	MultiValueMap<String, Object> getAllAnnotationAttributes(String annotationName);
 
 	/**
+	 * 检索给定类型的所有注释的所有属性(例如，如果在底层元素上定义了直接注释或元注释)。请注意，此变体不考虑属性覆盖。
+	 *
 	 * Retrieve all attributes of all annotations of the given type, if any (i.e. if
 	 * defined on the underlying element, as direct annotation or meta-annotation).
 	 * Note that this variant does <i>not</i> take attribute overrides into account.

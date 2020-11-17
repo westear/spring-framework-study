@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="constructDemo" class="com.westear.beanInstance.ConstructDemo">
+
+	</bean>
+
+	<bean id="constructDemo1" class="com.westear.beanInstance.ConstructDemo">
+		<constructor-arg name="str" value="String" />
+		<constructor-arg name="number" value="10" />
+	</bean>
+
+	<bean id="constructDemo2" class="com.westear.beanInstance.ConstructDemo">
+		<constructor-arg index="0" type="com.westear.beanInstance.ConstructArg" ref="constructArg"/>
+		<constructor-arg index="1" type="com.westear.beanInstance.SecondArg" ref="secondArg"/>
+	</bean>
+
+	<bean id="constructArg" class="com.westear.beanInstance.ConstructArg">
+
+	</bean>
+
+	<bean id="secondArg" class="com.westear.beanInstance.SecondArg">
+
+	</bean>
+</beans>

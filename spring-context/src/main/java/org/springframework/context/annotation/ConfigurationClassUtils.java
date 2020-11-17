@@ -87,11 +87,14 @@ abstract class ConfigurationClassUtils {
 		}
 
 		AnnotationMetadata metadata;
+
+		//如果是被注解的 benDefinition
 		if (beanDef instanceof AnnotatedBeanDefinition &&
 				className.equals(((AnnotatedBeanDefinition) beanDef).getMetadata().getClassName())) {
 			// Can reuse the pre-parsed metadata from the given BeanDefinition...
 			metadata = ((AnnotatedBeanDefinition) beanDef).getMetadata();
 		}
+		//不是被注解的 benDefinition，可能是 xml,也可能是程序员手动生成的 benDefinition
 		else if (beanDef instanceof AbstractBeanDefinition && ((AbstractBeanDefinition) beanDef).hasBeanClass()) {
 			// Check already loaded Class if present...
 			// since we possibly can't even load the class file for this Class.
@@ -112,9 +115,15 @@ abstract class ConfigurationClassUtils {
 			}
 		}
 
+		//判断该 bean 是否被 @Configuration 注解, 把它标注成 configurationClass 类， value=full
 		if (isFullConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_FULL);
 		}
+		/*
+			没有被 @Configuration 注解，
+			则判断是否被 @Component,@ComponentScan,@Import,@ImportResource (或自定义注解中包含了这四种注解) 这几个中的任意一个注解, 有则返回true
+			同样把它构造成 configurationClass 类, 但是 value=lite
+		 */
 		else if (isLiteConfigurationCandidate(metadata)) {
 			beanDef.setAttribute(CONFIGURATION_CLASS_ATTRIBUTE, CONFIGURATION_CLASS_LITE);
 		}
@@ -123,6 +132,7 @@ abstract class ConfigurationClassUtils {
 		}
 
 		// It's a full or lite configuration candidate... Let's determine the order value, if any.
+		//它是一个完整的或精简的配置候选…我们来确定一下 order 值，如果有的话。
 		Integer order = getOrder(metadata);
 		if (order != null) {
 			beanDef.setAttribute(ORDER_ATTRIBUTE, order);
@@ -143,7 +153,7 @@ abstract class ConfigurationClassUtils {
 	}
 
 	/**
-	 * Check the given metadata for a full configuration class candidate
+	 * Check the given metadata for a full configuration class candidate 检查给定的元数据以获得完整的配置类候选
 	 * (i.e. a class annotated with {@code @Configuration}).
 	 * @param metadata the metadata of the annotated class
 	 * @return {@code true} if the given class is to be processed as a full

@@ -3,6 +3,7 @@ package com.westear.learn;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  */
 @Configuration
 @ComponentScan("com.westear.learn")
+//@EnableAspectJAutoProxy
 public class AppConfig {
 
 	/**
